@@ -65,8 +65,8 @@ def encode_char(character):
 def decode_code(code):
   return chr(code)
 
-def prime_generation():
-  pass
+def prime_generation(min, max):
+  return random.choice([x for x in range(min, max) if not [t for t in range(2, x) if not x % t]])
 
 def key_generation(random_prime):
   random_int_g = random.randint(0, random_prime-1)
@@ -98,23 +98,23 @@ def decrypt_char(ciphertext, private_key):
 
 @timer
 def decrypt_message(message, private_key):
-  return [decrypt_char(m, private_key) for m in encrypted_message]
+  return [decrypt_char(m, private_key) for m in message]
 
 if __name__ == "__main__":
-  file = 'bismillah.txt'
+  file = 'data/bismillah.txt'
   filename, extension = file.split('.')
   message = message_to_bytes(file)
-  # message = 'Infrastruktur langit utk orang tua menuju akhirat'
-  # print(message)
-  # public_key, private_key = key_generation(104743)
-  # write_private_key(private_key, filename)
-  # write_public_key(public_key, filename)
-  # encrypted_message = encrypt_message(message, public_key)
-  # write_enc_message(encrypted_message, filename)
+  prime = prime_generation(100000, 111000)
+  print(prime)
+  public_key, private_key = key_generation(prime)
+  write_private_key(private_key, filename)
+  write_public_key(public_key, filename)
+  encrypted_message = encrypt_message(message, public_key)
+  write_enc_message(encrypted_message, filename)
 
-  private_key = read_private_key('bismillah.pri')
-  encrypted_message = read_enc_message('bismillah_encrypted.txt')
+  private_key = read_private_key('data/bismillah.pri')
+  encrypted_message = read_enc_message('data/bismillah_encrypted.txt')
   decrypted_message = decrypt_message(encrypted_message, private_key)
   str_decrypted = ''.join(decrypted_message)
-  print(str_decrypted)
+  write_message(str_decrypted, 'data/bismillah_decrypted')
     
