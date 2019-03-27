@@ -70,13 +70,19 @@ def read_private_key(file_path):
     f.close()
     return int(pri)
 
+def generate_out_file(file_byte, file_path):
+    with open(file_path,"wb") as f:
+        f.write(file_byte)
+        f.close()
+        print("Succesfully written to ",file_path)
+
 
 def main(args):
   # CONFIG
   k = 10
-  p = 2570
-  a = -1
-  b = 188
+  p = 15733
+  a = 1
+  b = 3
   n = 727
   str_message = bytes("hariinihujan","utf-8")
 
@@ -100,44 +106,49 @@ def main(args):
 
   if (choice == 1):
     generate_keys(ecc, point_basis, n)
-    exit()
+    return
   else:
     # Checking arguments
     sender_private_path = args.sender_pri
     sender_pub_path = args.sender_pub
     receiver_private_path = args.receiver_pri
     receiver_pub_path = args.receiver_pub
+    extension = args.file_path.split('.')[-1]
     with open(args.file_path, "rb") as f:
       messages = f.read()
       f.close()
 
   # Alice's
-  print("\n[ Alice's ]")
+  print("\n[ Sender's ]")
   private_a = read_private_key(sender_private_path)
   public_a = read_public_key(sender_pub_path)
-  print("type public a")
-  print(type(public_a))
-  print("Alice's public point:",public_a,"is_on_curve:",ecc.is_on_curve(public_a))
+  print("Sender's public point:",public_a,"is_on_curve:",ecc.is_on_curve(public_a))
 
   # Bob's
-  print("\n[ Bob's ]")
+  print("\n[ Receiver's ]")
   private_b = read_private_key(receiver_private_path)
   public_b = read_public_key(receiver_pub_path)
-  print("Bob's public point:",public_b,"is_on_curve:",ecc.is_on_curve(public_b))
+  print("Receiver's public point:",public_b,"is_on_curve:",ecc.is_on_curve(public_b))
 
   # Encrypting messages 
   print("\n[ Encrypting ]")
-  print("Original message:",messages)
+#   print("Original message:",messages)
   encoded_messages = do_encoding(k, n, p, a, b, messages)
-  print("Encoded message: ",encoded_messages)
+#   print("Encoded message: ",encoded_messages)
   choosen_k = k
   encrypted_messages = [
       (ecc.iteration(point_basis, choosen_k),
       ecc.add(point_message, ecc.iteration(public_b, choosen_k)))
       for point_message in encoded_messages
   ]
-  print("Encrypted message: ", encrypted_messages)
+#   print("Encrypted message: ", encrypted_messages)
 
+  file_out_path = "encrypted_plainteks."+extension
+  with open(file_out_path,"w") as ff:
+    for point in encrypted_messages:
+      ff.write("({}, {})".format(str(point[0]),str(point[1])))
+    ff.close()
+    print("Succesfully written to ",file_out_path)
 
   # Decrypting messages 
   print("\n[ Decrypting ]")
@@ -148,11 +159,14 @@ def main(args):
       )
       for message in encrypted_messages
   ]
-  print("Decrypted point messages: ",decrypted_messages)
+#   print("Decrypted point messages: ",decrypted_messages)
   decoded_messages = (do_decoding(choosen_k, decrypted_messages))
-  print("Decoded messges: ",decoded_messages)
-  message = b"".join(decoded_messages)
-  print("Message: ",message)
+#   print("Decoded messges: ",decoded_messages)
+  messages = b"".join(decoded_messages)
+#   print("Messages: ",messages)
+
+  file_out_path = "decrypted_plainteks."+extension
+  generate_out_file(messages, file_out_path)
 
 
 if __name__ == "__main__":
