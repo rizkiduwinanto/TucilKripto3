@@ -2,6 +2,7 @@ import base64
 import random
 import time
 import functools
+import os
 
 def timer(func):
     """Record elapsed time in a function"""
@@ -14,6 +15,7 @@ def timer(func):
     return wrapper_timer
 
 def message_to_bytes(input_path):
+  print("File size of plaintext : {} bytes".format(os.path.getsize(input_path)))
   filename, extension = input_path.split('.')
   with open(input_path, "rb") as file:
     file_byte = file.read()
@@ -23,8 +25,10 @@ def message_to_bytes(input_path):
 def write_message(message, output_path):
   byte, extension = message.split('#')
   file_byte = base64.b64decode(byte.encode('utf-8'))
-  with open(output_path + '.' + extension, 'wb') as file:
+  output_path = output_path + '.' + extension
+  with open(output_path, 'wb') as file:
     file.write(file_byte)
+  print("File size of decrypted plaintext : {} bytes".format(os.path.getsize(output_path)))
 
 def write_public_key(public_key, output_path):
   h_num, random_int_g, random_prime = public_key
@@ -58,6 +62,7 @@ def write_enc_message(message, output_path):
   string = ''.join((str(a) + '#' + str(b) + '\n') for _, (a, b) in enumerate(message))
   with open(output_path + '_encrypted.txt', 'w') as file:
     file.write(string)
+  print("File size of ciphertext : {} bytes".format(os.path.getsize(output_path + '_encrypted.txt')))
 
 def encode_char(character):
   return ord(character)
@@ -66,9 +71,11 @@ def decode_code(code):
   return chr(code)
 
 def prime_generation(min, max):
+  """Generasi bilangan prime acak"""
   return random.choice([x for x in range(min, max) if not [t for t in range(2, x) if not x % t]])
 
 def key_generation(random_prime):
+  """Generasi kunci publik dan privat untuk enkripsi"""
   random_int_g = random.randint(0, random_prime-1)
   random_int_x = random.randint(1, random_prime-2)
   h_num = pow(random_int_g, random_int_x) % random_prime
@@ -77,6 +84,7 @@ def key_generation(random_prime):
   return public_key, private_key
 
 def encrypt_char(char, public_key):
+  """Enkripsi char dari message"""
   char_int = encode_char(char)
   h_num, random_int_g, random_prime = public_key
   random_int_k = random.randint(1, random_prime-2)
@@ -86,9 +94,11 @@ def encrypt_char(char, public_key):
 
 @timer
 def encrypt_message(message, public_key):
+  """Enkripsi char dari message"""
   return [encrypt_char(m, public_key) for m in message]
 
 def decrypt_char(ciphertext, private_key):
+  """Deskripsi char dari message"""
   a_num, b_num = ciphertext
   random_int_x, random_prime = private_key
   j_num = pow(a_num, random_prime-1-random_int_x) % random_prime
@@ -98,13 +108,15 @@ def decrypt_char(ciphertext, private_key):
 
 @timer
 def decrypt_message(message, private_key):
+  """Deskripsi message"""
   return [decrypt_char(m, private_key) for m in message]
 
 if __name__ == "__main__":
-  file = 'data/bismillah.txt'
+  file = 'data/rinaldi.jpg'
   filename, extension = file.split('.')
   message = message_to_bytes(file)
-  prime = prime_generation(100000, 111000)
+  print(message)
+  prime = prime_generation(100, 1000)
   print(prime)
   public_key, private_key = key_generation(prime)
   write_private_key(private_key, filename)
@@ -112,9 +124,9 @@ if __name__ == "__main__":
   encrypted_message = encrypt_message(message, public_key)
   write_enc_message(encrypted_message, filename)
 
-  private_key = read_private_key('data/bismillah.pri')
-  encrypted_message = read_enc_message('data/bismillah_encrypted.txt')
+  private_key = read_private_key('data/rinaldi.pri')
+  encrypted_message = read_enc_message('data/rinaldi_encrypted.txt')
   decrypted_message = decrypt_message(encrypted_message, private_key)
   str_decrypted = ''.join(decrypted_message)
-  write_message(str_decrypted, 'data/bismillah_decrypted')
+  write_message(str_decrypted, 'data/rinaldi_decrypted')
     
